@@ -1,5 +1,6 @@
 """Entrepreneurship module for Artemis personal OS."""
 from typing import Any, Dict
+from uuid import uuid4
 from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
 
 
@@ -40,17 +41,17 @@ class EntrepreneurshipModule(BaseModule):
     async def handle_action(self, action: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle entrepreneurship module actions."""
         if action == "create_venture":
-            venture_id = data.get("id", f"venture_{len(self.ventures)}")
+            venture_id = data.get("id", f"venture_{uuid4().hex[:8]}")
             self.ventures[venture_id] = data
             return {"status": "success", "venture_id": venture_id}
         
         elif action == "add_idea":
-            idea_id = data.get("id", f"idea_{len(self.ideas)}")
+            idea_id = data.get("id", f"idea_{uuid4().hex[:8]}")
             self.ideas[idea_id] = data
             return {"status": "success", "idea_id": idea_id}
         
         elif action == "set_milestone":
-            milestone_id = data.get("id", f"milestone_{len(self.milestones)}")
+            milestone_id = data.get("id", f"milestone_{uuid4().hex[:8]}")
             self.milestones[milestone_id] = data
             return {"status": "success", "milestone_id": milestone_id}
         

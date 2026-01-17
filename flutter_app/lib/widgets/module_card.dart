@@ -98,6 +98,7 @@ class ModuleCard extends StatelessWidget {
   }
 
   String _formatModuleName(String name) {
+    if (name.isEmpty) return name;
     return name[0].toUpperCase() + name.substring(1);
   }
 

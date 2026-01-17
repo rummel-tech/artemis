@@ -1,5 +1,6 @@
 """Asset management module for Artemis personal OS."""
 from typing import Any, Dict
+from uuid import uuid4
 from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
 
 
@@ -41,17 +42,17 @@ class AssetsModule(BaseModule):
     async def handle_action(self, action: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle assets module actions."""
         if action == "add_asset":
-            asset_id = data.get("id", f"asset_{len(self.assets)}")
+            asset_id = data.get("id", f"asset_{uuid4().hex[:8]}")
             self.assets[asset_id] = data
             return {"status": "success", "asset_id": asset_id}
         
         elif action == "log_maintenance":
-            maintenance_id = data.get("id", f"maintenance_{len(self.maintenance)}")
+            maintenance_id = data.get("id", f"maintenance_{uuid4().hex[:8]}")
             self.maintenance[maintenance_id] = data
             return {"status": "success", "maintenance_id": maintenance_id}
         
         elif action == "add_document":
-            document_id = data.get("id", f"document_{len(self.documents)}")
+            document_id = data.get("id", f"document_{uuid4().hex[:8]}")
             self.documents[document_id] = data
             return {"status": "success", "document_id": document_id}
         

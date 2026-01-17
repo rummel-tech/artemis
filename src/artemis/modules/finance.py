@@ -1,5 +1,6 @@
 """Finance management module for Artemis personal OS."""
 from typing import Any, Dict
+from uuid import uuid4
 from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
 
 
@@ -42,17 +43,17 @@ class FinanceModule(BaseModule):
     async def handle_action(self, action: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle finance module actions."""
         if action == "add_transaction":
-            transaction_id = data.get("id", f"transaction_{len(self.transactions)}")
+            transaction_id = data.get("id", f"transaction_{uuid4().hex[:8]}")
             self.transactions[transaction_id] = data
             return {"status": "success", "transaction_id": transaction_id}
         
         elif action == "create_budget":
-            budget_id = data.get("id", f"budget_{len(self.budgets)}")
+            budget_id = data.get("id", f"budget_{uuid4().hex[:8]}")
             self.budgets[budget_id] = data
             return {"status": "success", "budget_id": budget_id}
         
         elif action == "set_goal":
-            goal_id = data.get("id", f"goal_{len(self.goals)}")
+            goal_id = data.get("id", f"goal_{uuid4().hex[:8]}")
             self.goals[goal_id] = data
             return {"status": "success", "goal_id": goal_id}
         

@@ -4,6 +4,10 @@ import '../models/models.dart';
 import '../services/api_service.dart';
 import '../widgets/module_card.dart';
 
+// Responsive breakpoints
+const double _tabletBreakpoint = 800.0;
+const double _desktopBreakpoint = 1200.0;
+
 /// Home screen - single pane of glass for all modules
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -108,8 +112,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _getCrossAxisCount(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    if (width > 1200) return 3;
-    if (width > 800) return 2;
+    if (width > _desktopBreakpoint) return 3;
+    if (width > _tabletBreakpoint) return 2;
     return 1;
   }
 }

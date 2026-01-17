@@ -1,5 +1,6 @@
 """Nutrition management module for Artemis personal OS."""
 from typing import Any, Dict
+from uuid import uuid4
 from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
 
 
@@ -40,17 +41,17 @@ class NutritionModule(BaseModule):
     async def handle_action(self, action: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle nutrition module actions."""
         if action == "log_meal":
-            meal_id = data.get("id", f"meal_{len(self.meals)}")
+            meal_id = data.get("id", f"meal_{uuid4().hex[:8]}")
             self.meals[meal_id] = data
             return {"status": "success", "meal_id": meal_id}
         
         elif action == "add_recipe":
-            recipe_id = data.get("id", f"recipe_{len(self.recipes)}")
+            recipe_id = data.get("id", f"recipe_{uuid4().hex[:8]}")
             self.recipes[recipe_id] = data
             return {"status": "success", "recipe_id": recipe_id}
         
         elif action == "set_goal":
-            goal_id = data.get("id", f"goal_{len(self.goals)}")
+            goal_id = data.get("id", f"goal_{uuid4().hex[:8]}")
             self.goals[goal_id] = data
             return {"status": "success", "goal_id": goal_id}
         

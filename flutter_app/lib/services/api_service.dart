@@ -5,6 +5,7 @@ import '../models/models.dart';
 /// API Service for communicating with Artemis backend
 class ApiService {
   // Default to localhost, can be configured via environment variables
+  // TODO: Use HTTPS and configure via environment for production
   final String baseUrl;
 
   ApiService({String? baseUrl})
@@ -16,7 +17,8 @@ class ApiService {
     if (response.statusCode == 200) {
       return json.decode(response.body) as Map<String, dynamic>;
     }
-    throw Exception('Failed to get health status');
+    throw Exception(
+        'Failed to get health status: ${response.statusCode} - ${response.body}');
   }
 
   /// List all available modules
@@ -26,7 +28,8 @@ class ApiService {
       final List<dynamic> modules = json.decode(response.body);
       return modules.map((m) => m.toString()).toList();
     }
-    throw Exception('Failed to list modules');
+    throw Exception(
+        'Failed to list modules: ${response.statusCode} - ${response.body}');
   }
 
   /// Get status of all modules
@@ -38,7 +41,8 @@ class ApiService {
           .map((s) => ModuleStatus.fromJson(s as Map<String, dynamic>))
           .toList();
     }
-    throw Exception('Failed to get modules status');
+    throw Exception(
+        'Failed to get modules status: ${response.statusCode} - ${response.body}');
   }
 
   /// Get status of a specific module
@@ -49,7 +53,8 @@ class ApiService {
       return ModuleStatus.fromJson(
           json.decode(response.body) as Map<String, dynamic>);
     }
-    throw Exception('Failed to get module status');
+    throw Exception(
+        'Failed to get module status: ${response.statusCode} - ${response.body}');
   }
 
   /// Execute an action on a module
@@ -66,6 +71,7 @@ class ApiService {
     if (response.statusCode == 200) {
       return json.decode(response.body) as Map<String, dynamic>;
     }
-    throw Exception('Failed to execute action');
+    throw Exception(
+        'Failed to execute action: ${response.statusCode} - ${response.body}');
   }
 }

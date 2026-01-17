@@ -1,5 +1,6 @@
 """Work management module for Artemis personal OS."""
 from typing import Any, Dict
+from uuid import uuid4
 from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
 
 
@@ -39,12 +40,12 @@ class WorkModule(BaseModule):
     async def handle_action(self, action: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle work module actions."""
         if action == "create_task":
-            task_id = data.get("id", f"task_{len(self.tasks)}")
+            task_id = data.get("id", f"task_{uuid4().hex[:8]}")
             self.tasks[task_id] = data
             return {"status": "success", "task_id": task_id}
         
         elif action == "create_project":
-            project_id = data.get("id", f"project_{len(self.projects)}")
+            project_id = data.get("id", f"project_{uuid4().hex[:8]}")
             self.projects[project_id] = data
             return {"status": "success", "project_id": project_id}
         

@@ -20,9 +20,10 @@ app = FastAPI(
 )
 
 # Configure CORS for Flutter web and mobile apps
+# TODO: Configure specific origins for production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
+    allow_origins=["http://localhost:*", "http://127.0.0.1:*"],  # Development only
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
