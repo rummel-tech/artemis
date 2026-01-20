@@ -152,6 +152,17 @@ ruff check src/
 mypy src/
 ```
 
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md) - System design
+- [Implementation](docs/IMPLEMENTATION.md) - Implementation details
+- [Deployment](docs/DEPLOYMENT.md) - Deployment guide
+- [Changelog](./CHANGELOG.md) - Version history
+
 ## License
 
 MIT License - see LICENSE file for details
+
+---
+
+[Platform Documentation](../docs/) | [Product Overview](../docs/products/artemis.md)
