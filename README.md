@@ -154,6 +154,7 @@ mypy src/
 
 ## Documentation
 
+- [Objectives](./OBJECTIVES.md) - Goals, requirements, and success criteria
 - [Architecture](docs/ARCHITECTURE.md) - System design
 - [Implementation](docs/IMPLEMENTATION.md) - Implementation details
 - [Deployment](docs/DEPLOYMENT.md) - Deployment guide
