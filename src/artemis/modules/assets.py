@@ -1,7 +1,8 @@
 """Asset management module for Artemis personal OS."""
+from datetime import date, timedelta
 from typing import Any, Dict
 from uuid import uuid4
-from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
+from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus, ModuleSummary, QuickAction
 
 
 class AssetsModule(BaseModule):
@@ -58,5 +59,37 @@ class AssetsModule(BaseModule):
         
         elif action == "list_assets":
             return {"assets": list(self.assets.values())}
-        
+
         return {"status": "error", "message": f"Unknown action: {action}"}
+
+    async def get_summary(self) -> ModuleSummary:
+        """Get summary information for the assets module."""
+        today = date.today()
+        upcoming_date = (today + timedelta(days=30)).isoformat()
+
+        upcoming_maintenance = sum(
+            1 for m in self.maintenance.values()
+            if m.get("scheduled_date", "") <= upcoming_date and m.get("status") != "completed"
+        )
+
+        recent_assets = sorted(
+            self.assets.values(),
+            key=lambda x: x.get("created_at", ""),
+            reverse=True
+        )[:5]
+
+        return ModuleSummary(
+            name=self.name,
+            enabled=self.is_enabled,
+            healthy=self._initialized,
+            stats={
+                "asset_count": len(self.assets),
+                "upcoming_maintenance": upcoming_maintenance,
+                "documents_count": len(self.documents),
+            },
+            recent_items=[{"type": "asset", **a} for a in recent_assets],
+            quick_actions=[
+                QuickAction(id="add_asset", label="Add Asset", action="add_asset", icon="home"),
+                QuickAction(id="log_maintenance", label="Log Maintenance", action="log_maintenance", icon="build"),
+            ],
+        )

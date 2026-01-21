@@ -1,7 +1,7 @@
 """Entrepreneurship module for Artemis personal OS."""
 from typing import Any, Dict
 from uuid import uuid4
-from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
+from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus, ModuleSummary, QuickAction
 
 
 class EntrepreneurshipModule(BaseModule):
@@ -57,5 +57,43 @@ class EntrepreneurshipModule(BaseModule):
         
         elif action == "list_ventures":
             return {"ventures": list(self.ventures.values())}
-        
+
         return {"status": "error", "message": f"Unknown action: {action}"}
+
+    async def get_summary(self) -> ModuleSummary:
+        """Get summary information for the entrepreneurship module."""
+        active_milestones = sum(
+            1 for milestone in self.milestones.values()
+            if milestone.get("status") == "active"
+        )
+
+        recent_ventures = sorted(
+            self.ventures.values(),
+            key=lambda x: x.get("created_at", ""),
+            reverse=True
+        )[:3]
+
+        recent_ideas = sorted(
+            self.ideas.values(),
+            key=lambda x: x.get("created_at", ""),
+            reverse=True
+        )[:2]
+
+        return ModuleSummary(
+            name=self.name,
+            enabled=self.is_enabled,
+            healthy=self._initialized,
+            stats={
+                "venture_count": len(self.ventures),
+                "idea_count": len(self.ideas),
+                "active_milestones": active_milestones,
+            },
+            recent_items=[
+                *[{"type": "venture", **v} for v in recent_ventures],
+                *[{"type": "idea", **i} for i in recent_ideas],
+            ],
+            quick_actions=[
+                QuickAction(id="add_idea", label="Capture Idea", action="add_idea", icon="lightbulb"),
+                QuickAction(id="create_venture", label="New Venture", action="create_venture", icon="rocket_launch"),
+            ],
+        )

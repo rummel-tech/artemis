@@ -4,13 +4,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Any, Dict, List
 from artemis.core.registry import registry
-from artemis.core.module import ModuleConfig, ModuleStatus
+from artemis.core.module import ModuleConfig, ModuleStatus, ModuleSummary
 from artemis.modules.work import WorkModule
 from artemis.modules.fitness import FitnessModule
 from artemis.modules.nutrition import NutritionModule
 from artemis.modules.entrepreneurship import EntrepreneurshipModule
 from artemis.modules.finance import FinanceModule
 from artemis.modules.assets import AssetsModule
+
+
+class DashboardSummary(BaseModel):
+    """Dashboard summary containing all module summaries."""
+
+    modules: List[ModuleSummary]
 
 
 app = FastAPI(
@@ -109,8 +115,30 @@ async def execute_module_action(
     module = registry.get(module_name)
     if not module:
         raise HTTPException(status_code=404, detail=f"Module '{module_name}' not found")
-    
+
     if not module.is_enabled:
         raise HTTPException(status_code=403, detail=f"Module '{module_name}' is not enabled")
-    
+
     return await module.handle_action(request.action, request.data)
+
+
+@app.get("/dashboard/summary", response_model=DashboardSummary)
+async def get_dashboard_summary() -> DashboardSummary:
+    """Get dashboard summary with all module statistics."""
+    summaries = []
+    for module_name in registry.list_modules():
+        module = registry.get(module_name)
+        if module and module.is_enabled:
+            summary = await module.get_summary()
+            summaries.append(summary)
+    return DashboardSummary(modules=summaries)
+
+
+@app.get("/modules/{module_name}/summary", response_model=ModuleSummary)
+async def get_module_summary(module_name: str) -> ModuleSummary:
+    """Get summary for a specific module."""
+    module = registry.get(module_name)
+    if not module:
+        raise HTTPException(status_code=404, detail=f"Module '{module_name}' not found")
+
+    return await module.get_summary()

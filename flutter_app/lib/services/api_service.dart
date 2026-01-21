@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/models.dart';
+import '../models/dashboard_models.dart';
 
 /// API Service for communicating with Artemis backend
 class ApiService {
@@ -73,5 +74,28 @@ class ApiService {
     }
     throw Exception(
         'Failed to execute action: ${response.statusCode} - ${response.body}');
+  }
+
+  /// Get dashboard summary with all module statistics
+  Future<DashboardSummary> getDashboardSummary() async {
+    final response = await http.get(Uri.parse('$baseUrl/dashboard/summary'));
+    if (response.statusCode == 200) {
+      return DashboardSummary.fromJson(
+          json.decode(response.body) as Map<String, dynamic>);
+    }
+    throw Exception(
+        'Failed to get dashboard summary: ${response.statusCode} - ${response.body}');
+  }
+
+  /// Get summary for a specific module
+  Future<ModuleSummary> getModuleSummary(String moduleName) async {
+    final response =
+        await http.get(Uri.parse('$baseUrl/modules/$moduleName/summary'));
+    if (response.statusCode == 200) {
+      return ModuleSummary.fromJson(
+          json.decode(response.body) as Map<String, dynamic>);
+    }
+    throw Exception(
+        'Failed to get module summary: ${response.statusCode} - ${response.body}');
   }
 }

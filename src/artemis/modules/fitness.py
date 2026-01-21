@@ -1,7 +1,8 @@
 """Fitness tracking module for Artemis personal OS."""
+from datetime import date, timedelta
 from typing import Any, Dict
 from uuid import uuid4
-from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
+from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus, ModuleSummary, QuickAction
 
 
 class FitnessModule(BaseModule):
@@ -54,5 +55,42 @@ class FitnessModule(BaseModule):
         
         elif action == "list_goals":
             return {"goals": list(self.goals.values())}
-        
+
         return {"status": "error", "message": f"Unknown action: {action}"}
+
+    async def get_summary(self) -> ModuleSummary:
+        """Get summary information for the fitness module."""
+        today = date.today()
+        week_ago = (today - timedelta(days=7)).isoformat()
+
+        workouts_this_week = sum(
+            1 for workout in self.workouts.values()
+            if workout.get("date", "") >= week_ago
+        )
+
+        active_goals = sum(
+            1 for goal in self.goals.values()
+            if goal.get("status") == "active"
+        )
+
+        recent_workouts = sorted(
+            self.workouts.values(),
+            key=lambda x: x.get("date", ""),
+            reverse=True
+        )[:5]
+
+        return ModuleSummary(
+            name=self.name,
+            enabled=self.is_enabled,
+            healthy=self._initialized,
+            stats={
+                "workouts_this_week": workouts_this_week,
+                "total_workouts": len(self.workouts),
+                "active_goals": active_goals,
+            },
+            recent_items=[{"type": "workout", **w} for w in recent_workouts],
+            quick_actions=[
+                QuickAction(id="log_workout", label="Log Workout", action="log_workout", icon="fitness_center"),
+                QuickAction(id="set_goal", label="Set Goal", action="set_goal", icon="flag"),
+            ],
+        )

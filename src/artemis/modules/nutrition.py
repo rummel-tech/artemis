@@ -1,7 +1,8 @@
 """Nutrition management module for Artemis personal OS."""
+from datetime import date
 from typing import Any, Dict
 from uuid import uuid4
-from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
+from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus, ModuleSummary, QuickAction
 
 
 class NutritionModule(BaseModule):
@@ -57,5 +58,36 @@ class NutritionModule(BaseModule):
         
         elif action == "list_meals":
             return {"meals": list(self.meals.values())}
-        
+
         return {"status": "error", "message": f"Unknown action: {action}"}
+
+    async def get_summary(self) -> ModuleSummary:
+        """Get summary information for the nutrition module."""
+        today = date.today().isoformat()
+
+        meals_today = sum(
+            1 for meal in self.meals.values()
+            if meal.get("date") == today
+        )
+
+        recent_meals = sorted(
+            self.meals.values(),
+            key=lambda x: x.get("date", ""),
+            reverse=True
+        )[:5]
+
+        return ModuleSummary(
+            name=self.name,
+            enabled=self.is_enabled,
+            healthy=self._initialized,
+            stats={
+                "meals_today": meals_today,
+                "recipes_count": len(self.recipes),
+                "total_meals": len(self.meals),
+            },
+            recent_items=[{"type": "meal", **m} for m in recent_meals],
+            quick_actions=[
+                QuickAction(id="log_meal", label="Log Meal", action="log_meal", icon="restaurant"),
+                QuickAction(id="add_recipe", label="Add Recipe", action="add_recipe", icon="menu_book"),
+            ],
+        )

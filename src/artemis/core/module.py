@@ -1,12 +1,12 @@
 """Base module interface for all Artemis modules."""
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 
 class ModuleConfig(BaseModel):
     """Base configuration for all modules."""
-    
+
     name: str
     enabled: bool = True
     settings: Dict[str, Any] = {}
@@ -14,11 +14,31 @@ class ModuleConfig(BaseModel):
 
 class ModuleStatus(BaseModel):
     """Status information for a module."""
-    
+
     name: str
     enabled: bool
     healthy: bool
     message: Optional[str] = None
+
+
+class QuickAction(BaseModel):
+    """Quick action that can be performed from the dashboard."""
+
+    id: str
+    label: str
+    action: str
+    icon: Optional[str] = None
+
+
+class ModuleSummary(BaseModel):
+    """Summary information for dashboard display."""
+
+    name: str
+    enabled: bool
+    healthy: bool
+    stats: Dict[str, Any] = {}
+    recent_items: List[Dict[str, Any]] = []
+    quick_actions: List[QuickAction] = []
 
 
 class BaseModule(ABC):
@@ -74,16 +94,25 @@ class BaseModule(ABC):
     @abstractmethod
     async def handle_action(self, action: str, data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle a module-specific action.
-        
+
         Args:
             action: The action to perform
             data: Action parameters
-            
+
         Returns:
             Result of the action
         """
         pass
-    
+
+    @abstractmethod
+    async def get_summary(self) -> ModuleSummary:
+        """Get summary information for dashboard display.
+
+        Returns:
+            ModuleSummary with stats, recent items, and quick actions
+        """
+        pass
+
     @property
     def name(self) -> str:
         """Get the module name."""

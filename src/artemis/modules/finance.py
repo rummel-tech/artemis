@@ -1,7 +1,8 @@
 """Finance management module for Artemis personal OS."""
+from datetime import date
 from typing import Any, Dict
 from uuid import uuid4
-from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus
+from artemis.core.module import BaseModule, ModuleConfig, ModuleStatus, ModuleSummary, QuickAction
 
 
 class FinanceModule(BaseModule):
@@ -59,5 +60,38 @@ class FinanceModule(BaseModule):
         
         elif action == "list_transactions":
             return {"transactions": list(self.transactions.values())}
-        
+
         return {"status": "error", "message": f"Unknown action: {action}"}
+
+    async def get_summary(self) -> ModuleSummary:
+        """Get summary information for the finance module."""
+        today = date.today()
+        current_month = today.strftime("%Y-%m")
+
+        monthly_spend = sum(
+            float(t.get("amount", 0))
+            for t in self.transactions.values()
+            if t.get("date", "").startswith(current_month) and t.get("type") == "expense"
+        )
+
+        recent_transactions = sorted(
+            self.transactions.values(),
+            key=lambda x: x.get("date", ""),
+            reverse=True
+        )[:5]
+
+        return ModuleSummary(
+            name=self.name,
+            enabled=self.is_enabled,
+            healthy=self._initialized,
+            stats={
+                "transaction_count": len(self.transactions),
+                "monthly_spend": monthly_spend,
+                "budget_count": len(self.budgets),
+            },
+            recent_items=[{"type": "transaction", **t} for t in recent_transactions],
+            quick_actions=[
+                QuickAction(id="add_transaction", label="Add Transaction", action="add_transaction", icon="receipt_long"),
+                QuickAction(id="create_budget", label="Create Budget", action="create_budget", icon="savings"),
+            ],
+        )
