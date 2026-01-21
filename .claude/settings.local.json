@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(flutter pub get:*)",
+      "Bash(python -c:*)",
+      "Bash(PYTHONPATH=src python:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(grep:*)",
+      "Bash(git push)"
     ]
   }
 }
