@@ -207,11 +207,11 @@ marimo/_lsp/
 __marimo__/
 
 # Flutter/Dart
-flutter_app/.dart_tool/
-flutter_app/.flutter-plugins
-flutter_app/.flutter-plugins-dependencies
-flutter_app/.packages
-flutter_app/build/
-flutter_app/.pub-cache/
-flutter_app/.pub/
-flutter_app/pubspec.lock
+artemis_app/.dart_tool/
+artemis_app/.flutter-plugins
+artemis_app/.flutter-plugins-dependencies
+artemis_app/.packages
+artemis_app/build/
+artemis_app/.pub-cache/
+artemis_app/.pub/
+artemis_app/pubspec.lock

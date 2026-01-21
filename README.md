@@ -45,7 +45,7 @@ The API will be available at `http://localhost:8000`
 
 1. Navigate to the Flutter app directory:
 ```bash
-cd flutter_app
+cd artemis_app
 ```
 
 2. Install dependencies:
@@ -76,7 +76,7 @@ artemis/
 │   ├── core/             # Core module system
 │   ├── modules/          # Domain modules
 │   └── api/              # FastAPI application
-├── flutter_app/          # Flutter application
+├── artemis_app/          # Flutter application
 │   ├── lib/
 │   │   ├── models/       # Data models
 │   │   ├── services/     # API services
@@ -139,7 +139,7 @@ pytest
 
 Flutter tests:
 ```bash
-cd flutter_app
+cd artemis_app
 flutter test
 ```
 

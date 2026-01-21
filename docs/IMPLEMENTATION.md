@@ -131,7 +131,7 @@ artemis/
 │   │   └── assets.py
 │   └── api/                  # FastAPI application
 │       └── main.py
-├── flutter_app/              # Flutter UI
+├── artemis_app/              # Flutter UI
 │   ├── lib/
 │   │   ├── main.dart         # App entry point
 │   │   ├── models/           # Data models
@@ -162,7 +162,7 @@ Documentation: http://localhost:8000/docs
 
 ### Running the Flutter App
 ```bash
-cd flutter_app
+cd artemis_app
 flutter pub get
 flutter run -d chrome  # For web
 flutter run            # For mobile
@@ -174,7 +174,7 @@ flutter run            # For mobile
 pytest
 
 # Flutter tests
-cd flutter_app && flutter test
+cd artemis_app && flutter test
 ```
 
 ## Future Enhancements

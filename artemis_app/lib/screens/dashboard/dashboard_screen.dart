@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../models/dashboard_models.dart';
 import '../../providers/dashboard_provider.dart';
-import '../../services/api_service.dart';
 import '../../widgets/dashboard/dashboard_header.dart';
 import '../../widgets/dashboard/module_summary_card.dart';
 import '../../widgets/dashboard/quick_action_fab.dart';
@@ -184,7 +183,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _handleQuickAction(String moduleName, QuickAction action) async {
     // Execute the quick action
-    final apiService = context.read<ApiService>();
     final scaffold = ScaffoldMessenger.of(context);
 
     try {

@@ -18,7 +18,7 @@ python run_server.py
 ### Frontend
 
 ```bash
-cd artemis/flutter_app
+cd artemis/artemis_app
 flutter pub get
 flutter run -d chrome
 ```
