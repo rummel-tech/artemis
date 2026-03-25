@@ -81,7 +81,7 @@ class WorkModule(BaseModule):
                     id="calendar_availability",
                     name="Calendar Availability",
                     description="Work hours and blocked time",
-                    schema={"type": "object"},
+                    data_schema={"type": "object"},
                     query_action="get_calendar_availability",
                 )
             ],

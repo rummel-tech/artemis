@@ -10,7 +10,6 @@ import '../../widgets/dashboard/quick_action_fab.dart';
 const double _tabletBreakpoint = 600.0;
 const double _desktopBreakpoint = 840.0;
 
-/// Main dashboard screen with module overview
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({Key? key}) : super(key: key);
 
@@ -22,7 +21,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Load dashboard data after first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<DashboardProvider>().loadDashboard();
     });
@@ -35,20 +33,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
         builder: (context, provider, child) {
           return RefreshIndicator(
             onRefresh: provider.refresh,
-            edgeOffset: 120, // Account for header
+            edgeOffset: 120,
             child: CustomScrollView(
               slivers: [
-                // Header
                 SliverToBoxAdapter(
                   child: DashboardHeader(summary: provider.summary),
                 ),
-
-                // Content
                 if (provider.isLoading && !provider.hasData)
                   const SliverFillRemaining(
                     child: Center(child: CircularProgressIndicator()),
                   )
-                else if (provider.state == DashboardState.error && !provider.hasData)
+                else if (provider.state == DashboardState.error &&
+                    !provider.hasData)
                   SliverFillRemaining(
                     child: _buildErrorState(provider),
                   )
@@ -66,14 +62,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
       floatingActionButton: Consumer<DashboardProvider>(
         builder: (context, provider, _) {
           if (!provider.hasData) return const SizedBox.shrink();
-
+          final modules = _buildModuleSummaries(provider.summary!);
           return QuickActionFab(
-            modules: provider.summary!.modules,
+            modules: modules,
             onActionSelected: _handleQuickAction,
           );
         },
       ),
     );
+  }
+
+  List<ModuleSummary> _buildModuleSummaries(DashboardSummary summary) {
+    final seen = <String>{};
+    final result = <ModuleSummary>[];
+    for (final card in summary.cards) {
+      if (seen.add(card.moduleName)) {
+        result.add(ModuleSummary(
+          name: card.moduleName,
+          enabled: true,
+          healthy: true,
+        ));
+      }
+    }
+    return result;
   }
 
   Widget _buildErrorState(DashboardProvider provider) {
@@ -108,6 +119,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildModuleGrid(DashboardSummary summary) {
+    final modules = _buildModuleSummaries(summary);
     return SliverPadding(
       padding: const EdgeInsets.all(16),
       sliver: SliverLayoutBuilder(
@@ -124,14 +136,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             delegate: SliverChildBuilderDelegate(
               (context, index) {
-                final module = summary.modules[index];
+                final module = modules[index];
                 return ModuleSummaryCard(
                   summary: module,
                   onTap: () => _handleModuleTap(module),
-                  onQuickAction: (action) => _handleQuickAction(module.name, action),
+                  onQuickAction: (action) =>
+                      _handleQuickAction(module.name, action),
                 );
               },
-              childCount: summary.modules.length,
+              childCount: modules.length,
             ),
           );
         },
@@ -141,36 +154,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   int _getCrossAxisCount(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    if (width > _desktopBreakpoint) return 3;
-    if (width > _tabletBreakpoint) return 2;
+    if (width >= _desktopBreakpoint) return 3;
+    if (width >= _tabletBreakpoint) return 2;
     return 1;
   }
 
   double _getAspectRatio(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    if (width > _desktopBreakpoint) return 1.3;
-    if (width > _tabletBreakpoint) return 1.4;
+    if (width >= _desktopBreakpoint) return 1.3;
+    if (width >= _tabletBreakpoint) return 1.4;
     return 1.6;
   }
 
   void _handleModuleTap(ModuleSummary module) {
-    // Show module details dialog for now
-    // TODO: Navigate to module detail screen
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(module.name[0].toUpperCase() + module.name.substring(1)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Status: ${module.healthy ? "Healthy" : "Unhealthy"}'),
-            Text('Enabled: ${module.enabled ? "Yes" : "No"}'),
-            const SizedBox(height: 16),
-            const Text('Statistics:', style: TextStyle(fontWeight: FontWeight.bold)),
-            ...module.stats.entries.map((e) => Text('${e.key}: ${e.value}')),
-          ],
-        ),
+        content: const Text('Module details coming soon.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -181,34 +182,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void _handleQuickAction(String moduleName, QuickAction action) async {
-    // Execute the quick action
+  void _handleQuickAction(String moduleName, QuickAction action) {
     final scaffold = ScaffoldMessenger.of(context);
-
-    try {
-      // For now, just show a snackbar - actual implementation would
-      // show a form or execute the action directly
-      scaffold.showSnackBar(
-        SnackBar(
-          content: Text('${action.label} for $moduleName'),
-          action: SnackBarAction(
-            label: 'Dismiss',
-            onPressed: () => scaffold.hideCurrentSnackBar(),
-          ),
+    scaffold.showSnackBar(
+      SnackBar(
+        content: Text('${action.label} for $moduleName'),
+        action: SnackBarAction(
+          label: 'Dismiss',
+          onPressed: () => scaffold.hideCurrentSnackBar(),
         ),
-      );
-
-      // In a real implementation, you might show a bottom sheet
-      // with a form to create the item
-      // await apiService.executeModuleAction(moduleName, ActionRequest(action: action.action, data: {...}));
-      // await context.read<DashboardProvider>().refresh();
-    } catch (e) {
-      scaffold.showSnackBar(
-        SnackBar(
-          content: Text('Failed to execute action: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+      ),
+    );
   }
 }

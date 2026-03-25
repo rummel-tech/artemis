@@ -93,7 +93,7 @@ class DataProviderDefinition(BaseModel):
     id: str
     name: str
     description: str = ""
-    schema: dict[str, Any] = {}
+    data_schema: dict[str, Any] = {}
     query_action: str
 
 

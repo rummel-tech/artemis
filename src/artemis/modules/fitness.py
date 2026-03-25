@@ -81,7 +81,7 @@ class FitnessModule(BaseModule):
                     id="calories_burned",
                     name="Calories Burned",
                     description="Daily calories burned via exercise",
-                    schema={"date": "date", "calories": "number", "activity_type": "string"},
+                    data_schema={"date": "date", "calories": "number", "activity_type": "string"},
                     query_action="get_daily_calories",
                 )
             ],
