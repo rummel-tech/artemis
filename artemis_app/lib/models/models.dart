@@ -1,40 +1,74 @@
-/// Models for Artemis Personal OS
 library;
 
-/// Module status model
 class ModuleStatus {
   final String name;
-  final bool enabled;
-  final bool healthy;
-  final String? message;
+  final String status;
 
   ModuleStatus({
     required this.name,
-    required this.enabled,
-    required this.healthy,
-    this.message,
+    required this.status,
   });
 
   factory ModuleStatus.fromJson(Map<String, dynamic> json) {
     return ModuleStatus(
       name: json['name'] as String,
-      enabled: json['enabled'] as bool,
-      healthy: json['healthy'] as bool,
-      message: json['message'] as String?,
+      status: json['status'] as String,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'name': name,
-      'enabled': enabled,
-      'healthy': healthy,
-      'message': message,
+      'status': status,
+    };
+  }
+
+  bool get isActive => status == 'active';
+}
+
+class ModuleManifest {
+  final String name;
+  final String version;
+  final String description;
+  final String icon;
+  final String color;
+  final List<Map<String, dynamic>> quickActions;
+
+  ModuleManifest({
+    required this.name,
+    required this.version,
+    required this.description,
+    required this.icon,
+    required this.color,
+    this.quickActions = const [],
+  });
+
+  factory ModuleManifest.fromJson(Map<String, dynamic> json) {
+    return ModuleManifest(
+      name: json['name'] as String,
+      version: json['version'] as String,
+      description: json['description'] as String,
+      icon: json['icon'] as String,
+      color: json['color'] as String,
+      quickActions: (json['quick_actions'] as List<dynamic>?)
+              ?.map((a) => a as Map<String, dynamic>)
+              .toList() ??
+          [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'version': version,
+      'description': description,
+      'icon': icon,
+      'color': color,
+      'quick_actions': quickActions,
     };
   }
 }
 
-/// Action request model
 class ActionRequest {
   final String action;
   final Map<String, dynamic> data;

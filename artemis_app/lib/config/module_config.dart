@@ -21,7 +21,7 @@ class ModuleConfigs {
     'work': ModuleConfig(
       name: 'Work',
       icon: Icons.work,
-      color: Color(0xFF2196F3),
+      color: Color(0xFF4F8EF7),
       statLabels: {
         'task_count': 'Tasks',
         'project_count': 'Projects',

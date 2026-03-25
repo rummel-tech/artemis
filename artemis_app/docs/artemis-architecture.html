@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artemis — System Architecture Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Fraunces:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f5f2ec;
+  --surface: #faf8f4;
+  --surface2: #ede9e1;
+  --border: #d8d2c7;
+  --border2: #c4bdb0;
+  --ink: #1a1814;
+  --muted: #7a7265;
+  --accent: #1a3a6b;
+  --accent2: #6b3a1a;
+  --accent3: #1a5c3a;
+  --accent4: #5c1a3a;
+  --accent5: #3a5c1a;
+  --mono: 'IBM Plex Mono', monospace;
+  --serif: 'Fraunces', serif;
+  --grid: rgba(26,26,20,0.04);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  min-height: 100vh;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* HEADER */
+header {
+  padding: 32px 48px 24px;
+  border-bottom: 2px solid var(--ink);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  background: var(--surface);
+  position: sticky; top:0; z-index:100;
+}
+.logo-block {}
+.logo-title {
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+}
+.logo-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-top: 2px;
+}
+.nav-tabs {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.nav-tab {
+  padding: 8px 20px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  border: none;
+  border-right: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nav-tab:last-child { border-right: none; }
+.nav-tab:hover { background: var(--surface2); color: var(--ink); }
+.nav-tab.active { background: var(--ink); color: var(--bg); }
+.doc-meta {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.8;
+}
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* LAYOUT */
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 48px;
+}
+
+/* SECTION HEADER */
+.section-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border2);
+}
+.section-title span {
+  font-family: var(--mono);
+  font-size: 9px;
+  border: 1px solid var(--border2);
+  padding: 1px 6px;
+  border-radius: 2px;
+  color: var(--muted);
+}
+
+/* CARD */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 32px;
+  margin-bottom: 24px;
+  position: relative;
+}
+.card-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-label::before {
+  content: '';
+  width: 20px;
+  height: 1px;
+  background: var(--border2);
+}
+
+/* LAYER STACK */
+.layer-stack { display: flex; flex-direction: column; gap: 0; }
+
+.layer {
+  display: grid;
+  grid-template-columns: 140px 1fr 160px;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 24px;
+  border: 1px solid var(--border);
+  position: relative;
+  border-radius: 0;
+}
+.layer:first-child { border-radius: 6px 6px 0 0; }
+.layer:last-child { border-radius: 0 0 6px 6px; }
+.layer + .layer { border-top: none; }
+
+.layer-fl { background: rgba(26,58,107,0.04); border-left: 3px solid var(--accent); }
+.layer-api { background: rgba(107,58,26,0.04); border-left: 3px solid var(--accent2); }
+.layer-core { background: rgba(26,92,58,0.04); border-left: 3px solid var(--accent3); }
+.layer-mod { background: rgba(92,26,58,0.04); border-left: 3px solid var(--accent4); }
+.layer-data { background: rgba(58,92,26,0.04); border-left: 3px solid var(--accent5); }
+
+.layer-name {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.layer-fl .layer-name { color: var(--accent); }
+.layer-api .layer-name { color: var(--accent2); }
+.layer-core .layer-name { color: var(--accent3); }
+.layer-mod .layer-name { color: var(--accent4); }
+.layer-data .layer-name { color: var(--accent5); }
+
+.layer-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 3px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 2px;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.layer-tech {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+  line-height: 1.8;
+}
+
+.connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  position: relative;
+}
+.connector::before {
+  content: '';
+  position: absolute;
+  left: calc(70px + 12px);
+  top: 0; bottom: 0;
+  width: 1px;
+  border-left: 1px dashed var(--border2);
+}
+.connector-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 2px 10px;
+  border-radius: 20px;
+  position: relative;
+  z-index: 1;
+  margin-left: 154px;
+}
+
+/* MODULE GRID */
+.module-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.module-card {
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 20px;
+  background: var(--surface);
+  position: relative;
+  overflow: hidden;
+}
+.module-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.mc-work::after { background: var(--accent); }
+.mc-fitness::after { background: var(--accent3); }
+.mc-nutrition::after { background: var(--accent2); }
+.mc-finance::after { background: #b5860d; }
+.mc-mindfulness::after { background: var(--accent4); }
+.mc-sleep::after { background: #4a4a8a; }
+.mc-learning::after { background: #1a7a7a; }
+.mc-social::after { background: #7a1a1a; }
+
+.module-icon { font-size: 20px; margin-bottom: 10px; }
+.module-name {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+.module-desc { font-size: 12px; color: var(--muted); line-height: 1.6; font-style: italic; }
+
+/* TWO COL */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+@media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+/* FLOW DIAGRAM */
+.flow-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 28px;
+}
+.flow-name {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.flow-col { display: flex; flex-direction: column; align-items: center; }
+.fnode {
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 10px 18px;
+  font-size: 11px;
+  font-family: var(--mono);
+  text-align: center;
+  min-width: 200px;
+  background: var(--bg);
+  color: var(--ink);
+}
+.fnode.start { border-color: var(--accent3); color: var(--accent3); font-size: 10px; letter-spacing: 1px; }
+.fnode.decision { border-color: var(--accent2); background: rgba(107,58,26,0.04); }
+.fnode.action { border-color: var(--accent); background: rgba(26,58,107,0.04); }
+.fnode.end { border-color: var(--accent4); color: var(--accent4); font-size: 10px; }
+.farrow {
+  width: 1px; height: 20px;
+  border-left: 1px solid var(--border2);
+  position: relative;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.farrow::after { content: '▾'; font-size: 8px; color: var(--muted); margin-bottom: -2px; }
+
+.fbranch { display: flex; gap: 12px; width: 100%; justify-content: center; margin: 4px 0; }
+.fbranch-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
+.blabel { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 3px; }
+
+/* INTEGRATION TABLE */
+.int-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.int-table th {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 2px solid var(--border2);
+}
+.int-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.int-table tr:last-child td { border-bottom: none; }
+.int-table tr:hover td { background: rgba(26,26,20,0.02); }
+
+.tag {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 2px;
+  margin: 1px;
+  border: 1px solid;
+}
+.tag-blue { color: var(--accent); border-color: rgba(26,58,107,0.3); background: rgba(26,58,107,0.06); }
+.tag-green { color: var(--accent3); border-color: rgba(26,92,58,0.3); background: rgba(26,92,58,0.06); }
+.tag-brown { color: var(--accent2); border-color: rgba(107,58,26,0.3); background: rgba(107,58,26,0.06); }
+.tag-plum { color: var(--accent4); border-color: rgba(92,26,58,0.3); background: rgba(92,26,58,0.06); }
+.tag-gold { color: #7a5c00; border-color: rgba(181,134,13,0.3); background: rgba(181,134,13,0.06); }
+.tag-teal { color: #1a6a6a; border-color: rgba(26,122,122,0.3); background: rgba(26,122,122,0.06); }
+.tag-muted { color: var(--muted); border-color: var(--border2); background: var(--surface2); }
+
+/* API TABLE */
+.method { font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 2px; border: 1px solid; font-weight: 600; }
+.method-get { color: var(--accent3); border-color: rgba(26,92,58,0.4); background: rgba(26,92,58,0.06); }
+.method-post { color: var(--accent); border-color: rgba(26,58,107,0.4); background: rgba(26,58,107,0.06); }
+.method-put { color: var(--accent2); border-color: rgba(107,58,26,0.4); background: rgba(107,58,26,0.06); }
+.method-delete { color: #8a2020; border-color: rgba(138,32,32,0.4); background: rgba(138,32,32,0.06); }
+
+code {
+  font-family: var(--mono);
+  font-size: 11px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+
+/* ANNOTATION STYLE */
+.note {
+  font-family: var(--serif);
+  font-size: 13px;
+  font-style: italic;
+  color: var(--muted);
+  border-left: 2px solid var(--border2);
+  padding: 8px 16px;
+  margin: 16px 0;
+  line-height: 1.7;
+}
+
+/* FOOTER */
+footer {
+  border-top: 1px solid var(--border2);
+  margin-top: 64px;
+  padding: 24px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.footer-text { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+/* ANIMATIONS */
+@keyframes fadeUp { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: none; } }
+.panel.active .card, .panel.active .two-col, .panel.active .flow-card {
+  animation: fadeUp 0.4s ease forwards;
+}
+
+/* SCHEMA BOX */
+.schema-box {
+  background: var(--ink);
+  color: #d4f0a0;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.8;
+  padding: 20px 24px;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre;
+}
+.schema-comment { color: #6a8a50; }
+.schema-key { color: #a0d4f0; }
+.schema-type { color: #f0c8a0; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <div class="logo-title">Artemis / OS</div>
+    <div class="logo-sub">System Architecture Blueprint</div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="show('arch', this)">Architecture</button>
+    <button class="nav-tab" onclick="show('flows', this)">System Flows</button>
+    <button class="nav-tab" onclick="show('integration', this)">Integrations</button>
+    <button class="nav-tab" onclick="show('api', this)">API & Schema</button>
+  </nav>
+  <div class="doc-meta">
+    v0.3 — Alpha<br>
+    Last revised: Mar 2026<br>
+    Design reference
+  </div>
+</header>
+
+<!-- ARCHITECTURE -->
+<div class="panel active" id="panel-arch">
+<div class="page">
+
+  <div class="section-title">Layer Architecture <span>system overview</span></div>
+
+  <div class="card">
+    <div class="card-label">Five-layer stack — each layer communicates only with adjacent layers</div>
+    <div class="layer-stack">
+
+      <div class="layer layer-fl">
+        <div class="layer-name">Flutter UI</div>
+        <div class="layer-chips">
+          <span class="chip">Dashboard Builder</span>
+          <span class="chip">Activity Calendar</span>
+          <span class="chip">Notification Center</span>
+          <span class="chip">Dynamic Widget Loader</span>
+          <span class="chip">Settings & Preferences</span>
+        </div>
+        <div class="layer-tech">Mobile / Desktop<br>Flutter 3.x · Dart</div>
+      </div>
+      <div class="connector"><span class="connector-tag">REST API · JSON · HTTPS</span></div>
+
+      <div class="layer layer-api">
+        <div class="layer-name">FastAPI Layer</div>
+        <div class="layer-chips">
+          <span class="chip">Module Discovery API</span>
+          <span class="chip">Activity Endpoints</span>
+          <span class="chip">Notification API</span>
+          <span class="chip">Dashboard API</span>
+          <span class="chip">Feedback API</span>
+          <span class="chip">Calendar Sync</span>
+        </div>
+        <div class="layer-tech">Python 3.11+<br>FastAPI · Pydantic v2</div>
+      </div>
+      <div class="connector"><span class="connector-tag">Service calls · Internal events</span></div>
+
+      <div class="layer layer-core">
+        <div class="layer-name">Core Platform</div>
+        <div class="layer-chips">
+          <span class="chip">Manifest System</span>
+          <span class="chip">Discovery Service</span>
+          <span class="chip">Activity Orchestrator</span>
+          <span class="chip">Notification Manager</span>
+          <span class="chip">Feedback System</span>
+          <span class="chip">Dashboard Builder</span>
+        </div>
+        <div class="layer-tech">Business logic<br>Service orchestration</div>
+      </div>
+      <div class="connector"><span class="connector-tag">Manifest registration · Permissioned data sharing</span></div>
+
+      <div class="layer layer-mod">
+        <div class="layer-name">Modules</div>
+        <div class="layer-chips">
+          <span class="chip">Work 💼</span>
+          <span class="chip">Fitness 🏋️</span>
+          <span class="chip">Nutrition 🥗</span>
+          <span class="chip">Finance 💰</span>
+          <span class="chip">Mindfulness 🧘</span>
+          <span class="chip">Sleep 😴</span>
+          <span class="chip">Learning 📚</span>
+          <span class="chip">Social 👥</span>
+        </div>
+        <div class="layer-tech">Pluggable<br>Declarative manifests</div>
+      </div>
+      <div class="connector"><span class="connector-tag">SQLAlchemy ORM · SQL queries</span></div>
+
+      <div class="layer layer-data">
+        <div class="layer-name">Data Layer</div>
+        <div class="layer-chips">
+          <span class="chip">PostgreSQL</span>
+          <span class="chip">module_registry</span>
+          <span class="chip">scheduled_activities</span>
+          <span class="chip">notifications</span>
+          <span class="chip">user_dashboards</span>
+          <span class="chip">cross_module_shares</span>
+        </div>
+        <div class="layer-tech">PostgreSQL 15+<br>JSONB · UUID keys</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="section-title">Module Ecosystem <span>8 pluggable modules</span></div>
+
+  <div class="card">
+    <div class="card-label">Each module declares capabilities via a manifest — entities, widgets, activities, integrations</div>
+    <div class="module-grid">
+      <div class="module-card mc-work">
+        <div class="module-icon">💼</div>
+        <div class="module-name">Work</div>
+        <div class="module-desc">Tasks, projects, work sessions, deadlines, time tracking</div>
+      </div>
+      <div class="module-card mc-fitness">
+        <div class="module-icon">🏋️</div>
+        <div class="module-name">Fitness</div>
+        <div class="module-desc">Workouts, exercise plans, progress tracking, metrics</div>
+      </div>
+      <div class="module-card mc-nutrition">
+        <div class="module-icon">🥗</div>
+        <div class="module-name">Nutrition</div>
+        <div class="module-desc">Meal planning, food logging, calorie & macro tracking</div>
+      </div>
+      <div class="module-card mc-finance">
+        <div class="module-icon">💰</div>
+        <div class="module-name">Finance</div>
+        <div class="module-desc">Budgets, transactions, savings goals, spending insights</div>
+      </div>
+      <div class="module-card mc-mindfulness">
+        <div class="module-icon">🧘</div>
+        <div class="module-name">Mindfulness</div>
+        <div class="module-desc">Meditation, mood tracking, journaling, stress scoring</div>
+      </div>
+      <div class="module-card mc-sleep">
+        <div class="module-icon">😴</div>
+        <div class="module-name">Sleep</div>
+        <div class="module-desc">Sleep schedules, quality tracking, bedtime routines</div>
+      </div>
+      <div class="module-card mc-learning">
+        <div class="module-icon">📚</div>
+        <div class="module-name">Learning</div>
+        <div class="module-desc">Study sessions, courses, reading lists, skill progress</div>
+      </div>
+      <div class="module-card mc-social">
+        <div class="module-icon">👥</div>
+        <div class="module-name">Social</div>
+        <div class="module-desc">Relationship tracking, events, communication reminders</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title">Manifest Structure <span>capability declaration</span></div>
+  <div class="card">
+    <div class="card-label">Every module implements get_manifest() — this is the complete interface contract</div>
+    <div class="schema-box"><span class="schema-comment"># ModuleManifest — complete capability declaration</span>
+<span class="schema-key">name</span>:                    <span class="schema-type">str</span>           <span class="schema-comment"># unique snake_case identifier</span>
+<span class="schema-key">version</span>:                 <span class="schema-type">str</span>           <span class="schema-comment"># semver</span>
+<span class="schema-key">icon</span>:                    <span class="schema-type">str</span>           <span class="schema-comment"># Material icon name</span>
+<span class="schema-key">color</span>:                   <span class="schema-type">str</span>           <span class="schema-comment"># hex — used for UI theming</span>
+
+<span class="schema-key">entities</span>:                <span class="schema-type">List[EntitySchema]</span>        <span class="schema-comment"># data models this module owns</span>
+<span class="schema-key">widgets</span>:                 <span class="schema-type">List[WidgetDefinition]</span>     <span class="schema-comment"># Flutter widget descriptors</span>
+<span class="schema-key">dashboard_cards</span>:         <span class="schema-type">List[DashboardCardDefinition]</span>
+<span class="schema-key">actions</span>:                 <span class="schema-type">List[ActionDefinition]</span>
+<span class="schema-key">schedulable_activities</span>:  <span class="schema-type">List[ActivityDefinition]</span>   <span class="schema-comment"># calendar-compatible tasks</span>
+<span class="schema-key">notification_types</span>:      <span class="schema-type">List[NotificationDefinition]</span>
+
+<span class="schema-key">provides_data</span>:           <span class="schema-type">List[DataProviderDefinition]</span> <span class="schema-comment"># data shared with other modules</span>
+<span class="schema-key">consumes_data</span>:           <span class="schema-type">List[DataConsumerDefinition]</span> <span class="schema-comment"># data needed from other modules</span>
+
+<span class="schema-key">metrics</span>:                 <span class="schema-type">List[MetricDefinition]</span>     <span class="schema-comment"># trackable analytics</span>
+<span class="schema-key">requires_modules</span>:        <span class="schema-type">List[str]</span>     <span class="schema-comment"># dependency declarations</span>
+<span class="schema-key">has_settings</span>:            <span class="schema-type">bool</span>
+<span class="schema-key">settings_schema</span>:         <span class="schema-type">Optional[Dict]</span></div>
+  </div>
+
+</div>
+</div>
+
+<!-- FLOWS -->
+<div class="panel" id="panel-flows">
+<div class="page">
+
+  <div class="section-title">System Flows <span>four core processes</span></div>
+
+  <div class="two-col">
+    <div class="flow-card">
+      <div class="flow-name">01 — Module Registration & Discovery</div>
+      <div class="flow-col">
+        <div class="fnode start">MODULE LOADED</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Module calls <code>register(manifest)</code></div>
+        <div class="farrow"></div>
+        <div class="fnode action">Discovery Service validates schema</div>
+        <div class="farrow"></div>
+        <div class="fnode decision">Dependencies satisfied?</div>
+        <div class="fbranch">
+          <div class="fbranch-col">
+            <div class="blabel" style="color:var(--accent3)">YES</div>
+            <div class="farrow"></div>
+            <div class="fnode action">Register entities, widgets & activities</div>
+            <div class="farrow"></div>
+            <div class="fnode action">Orchestrator subscribes to activity types</div>
+            <div class="farrow"></div>
+            <div class="fnode end">MODULE ACTIVE ✓</div>
+          </div>
+          <div class="fbranch-col">
+            <div class="blabel" style="color:var(--accent4)">NO</div>
+            <div class="farrow"></div>
+            <div class="fnode action" style="border-color:var(--accent4)">Queue deferred registration</div>
+            <div class="farrow"></div>
+            <div class="fnode action" style="border-color:var(--accent4)">Notify: missing dependency</div>
+            <div class="farrow"></div>
+            <div class="fnode end" style="border-color:var(--accent4);color:var(--accent4)">MODULE PENDING</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-card">
+      <div class="flow-name">02 — Activity Lifecycle</div>
+      <div class="flow-col">
+        <div class="fnode start">MODULE SCHEDULES ACTIVITY</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Orchestrator receives <code>schedule()</code></div>
+        <div class="farrow"></div>
+        <div class="fnode action">Validate time, duration, conflicts</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Persist to <code>scheduled_activities</code></div>
+        <div class="farrow"></div>
+        <div class="fnode action">Set reminders via Notification Manager</div>
+        <div class="farrow"></div>
+        <div class="fnode decision">Outcome?</div>
+        <div class="fbranch">
+          <div class="fbranch-col">
+            <div class="blabel" style="color:var(--accent3)">COMPLETED</div>
+            <div class="farrow"></div>
+            <div class="fnode action">Trigger feedback prompt</div>
+            <div class="farrow"></div>
+            <div class="fnode action">Update metrics & stats</div>
+            <div class="farrow"></div>
+            <div class="fnode end">DONE ✓</div>
+          </div>
+          <div class="fbranch-col">
+            <div class="blabel" style="color:var(--accent2)">MISSED</div>
+            <div class="farrow"></div>
+            <div class="fnode action" style="border-color:var(--accent2)">Mark as missed</div>
+            <div class="farrow"></div>
+            <div class="fnode action" style="border-color:var(--accent2)">Offer reschedule</div>
+            <div class="farrow"></div>
+            <div class="fnode end" style="border-color:var(--accent2);color:var(--accent2)">RESCHEDULED</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="flow-card">
+      <div class="flow-name">03 — Dynamic Dashboard Composition</div>
+      <div class="flow-col">
+        <div class="fnode start">USER OPENS DASHBOARD</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Load saved dashboard config</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Discovery Service: fetch active modules</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Resolve widget definitions from manifests</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Fetch live data per widget via module API</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Flutter renders widgets in configured grid</div>
+        <div class="farrow"></div>
+        <div class="fnode end">DASHBOARD RENDERED ✓</div>
+      </div>
+    </div>
+
+    <div class="flow-card">
+      <div class="flow-name">04 — Cross-Module Notification Flow</div>
+      <div class="flow-col">
+        <div class="fnode start">MODULE EMITS EVENT</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Notification Manager receives event</div>
+        <div class="farrow"></div>
+        <div class="fnode action">Check user notification preferences</div>
+        <div class="farrow"></div>
+        <div class="fnode decision">Delivery channel?</div>
+        <div class="fbranch">
+          <div class="fbranch-col">
+            <div class="blabel">PUSH</div>
+            <div class="farrow"></div>
+            <div class="fnode action" style="min-width:0;padding:8px 10px;font-size:10px">FCM / APNs</div>
+          </div>
+          <div class="fbranch-col">
+            <div class="blabel">IN-APP</div>
+            <div class="farrow"></div>
+            <div class="fnode action" style="min-width:0;padding:8px 10px;font-size:10px">Notif Center</div>
+          </div>
+          <div class="fbranch-col">
+            <div class="blabel">EMAIL</div>
+            <div class="farrow"></div>
+            <div class="fnode action" style="min-width:0;padding:8px 10px;font-size:10px">SMTP Queue</div>
+          </div>
+        </div>
+        <div class="farrow"></div>
+        <div class="fnode action">Persist to notifications table</div>
+        <div class="farrow"></div>
+        <div class="fnode end">NOTIFICATION DELIVERED ✓</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- INTEGRATIONS -->
+<div class="panel" id="panel-integration">
+<div class="page">
+
+  <div class="section-title">Cross-Module Integration Points <span>permissioned data sharing</span></div>
+
+  <div class="card">
+    <div class="card-label">All sharing is declared in manifests and requires user-granted permissions stored in cross_module_shares</div>
+    <table class="int-table">
+      <thead>
+        <tr>
+          <th>Provider Module</th>
+          <th>Data Exposed</th>
+          <th>Consumer Module(s)</th>
+          <th>Use Case</th>
+          <th>Permission</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag tag-blue">Work</span></td>
+          <td>Calendar availability, work hours</td>
+          <td><span class="tag tag-green">Fitness</span> <span class="tag tag-brown">Nutrition</span></td>
+          <td>Schedule workouts & meals around work blocks</td>
+          <td><span class="tag tag-muted">read</span></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-green">Fitness</span></td>
+          <td>Calories burned, activity level, intensity</td>
+          <td><span class="tag tag-brown">Nutrition</span></td>
+          <td>Adjust daily calorie targets based on exercise</td>
+          <td><span class="tag tag-muted">read</span></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-brown">Nutrition</span></td>
+          <td>Calorie intake, macro targets</td>
+          <td><span class="tag tag-green">Fitness</span></td>
+          <td>Fuel workout recommendations</td>
+          <td><span class="tag tag-muted">read</span></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-plum">Sleep</span></td>
+          <td>Sleep quality score, wake & sleep times</td>
+          <td><span class="tag tag-blue">Work</span> <span class="tag tag-green">Fitness</span></td>
+          <td>Adjust task load & workout intensity from rest quality</td>
+          <td><span class="tag tag-muted">read</span></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-plum">Mindfulness</span></td>
+          <td>Stress level, mood score</td>
+          <td><span class="tag tag-blue">Work</span> <span class="tag tag-green">Fitness</span></td>
+          <td>Recommend recovery days, reduce load on high-stress days</td>
+          <td><span class="tag tag-muted">read</span></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-gold">Finance</span></td>
+          <td>Budget categories, spending data</td>
+          <td><span class="tag tag-brown">Nutrition</span></td>
+          <td>Meal plan within grocery budget</td>
+          <td><span class="tag tag-muted">read</span></td>
+        </tr>
+        <tr>
+          <td><span class="tag tag-teal">Learning</span></td>
+          <td>Study sessions, focus blocks</td>
+          <td><span class="tag tag-blue">Work</span></td>
+          <td>Reserve focus time for deep work and study</td>
+          <td><span class="tag tag-muted">read</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="note">
+    Modules cannot read each other's data directly. All cross-module data access goes through the Core Platform's permissioned sharing layer, with records stored in <code>cross_module_shares</code>. Users grant or revoke permissions at any time.
+  </div>
+
+  <div class="section-title">Integration Patterns <span>how sharing works</span></div>
+  <div class="two-col">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-label">Provider declaration — in manifest.provides_data</div>
+      <div class="schema-box" style="font-size:10px"><span class="schema-key">id</span>:              <span class="schema-type">"calories_burned"</span>
+<span class="schema-key">name</span>:            <span class="schema-type">"Daily Calories Burned"</span>
+<span class="schema-key">description</span>:     <span class="schema-type">"Per-day calorie burn + activity type"</span>
+<span class="schema-key">schema</span>:           <span class="schema-type">{date, calories, activity_type}</span>
+<span class="schema-key">query_action</span>:     <span class="schema-type">"get_daily_calories"</span></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-label">Consumer declaration — in manifest.consumes_data</div>
+      <div class="schema-box" style="font-size:10px"><span class="schema-key">id</span>:              <span class="schema-type">"fitness_calories"</span>
+<span class="schema-key">provider_module</span>: <span class="schema-type">"fitness"</span>
+<span class="schema-key">provider_id</span>:     <span class="schema-type">"calories_burned"</span>
+<span class="schema-key">required</span>:         <span class="schema-type">false</span>
+<span class="schema-key">use_case</span>:         <span class="schema-type">"Adjust calorie targets from exercise"</span></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- API & SCHEMA -->
+<div class="panel" id="panel-api">
+<div class="page">
+
+  <div class="section-title">API Endpoints <span>all routes prefixed /api/v1</span></div>
+
+  <div class="two-col">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-label">Platform core — discovery, dashboard, activities</div>
+      <table class="int-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/modules/manifests</code></td><td>All module capabilities</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/modules/{name}/manifest</code></td><td>Single module manifest</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/modules/{name}/status</code></td><td>Registration status</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/widgets/dashboard</code></td><td>Available dashboard widgets</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/dashboard</code></td><td>User dashboard config</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/dashboard/cards</code></td><td>Add widget card</td></tr>
+          <tr><td><span class="method method-put">PUT</span></td><td><code>/dashboard/layout</code></td><td>Update card positions</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/activities/schedule</code></td><td>Schedule activity</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/activities/daily</code></td><td>Today's schedule</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/activities/upcoming</code></td><td>Next 7 days</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/activities/{id}/complete</code></td><td>Complete + feedback</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/activities/{id}/cancel</code></td><td>Cancel activity</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-label">Notifications, feedback & calendar</div>
+      <table class="int-table">
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/notifications</code></td><td>Unread notifications</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/notifications/{id}/read</code></td><td>Mark as read</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/notifications/{id}/action</code></td><td>Execute action</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/notifications/preferences</code></td><td>Delivery preferences</td></tr>
+          <tr><td><span class="method method-put">PUT</span></td><td><code>/notifications/preferences</code></td><td>Update preferences</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/feedback</code></td><td>Submit feedback</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/feedback/insights/{module}</code></td><td>Module insights</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/feedback/suggestions</code></td><td>AI suggestions</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/calendar/events</code></td><td>All events unified</td></tr>
+          <tr><td><span class="method method-get">GET</span></td><td><code>/calendar/availability</code></td><td>Free time slots</td></tr>
+          <tr><td><span class="method method-post">POST</span></td><td><code>/calendar/sync</code></td><td>External calendar sync</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="section-title" style="margin-top:24px">Database Schema <span>postgresql 15+</span></div>
+  <div class="card">
+    <div class="card-label">Key tables — all use UUID primary keys and JSONB for flexible payload fields</div>
+    <table class="int-table">
+      <thead><tr><th>Table</th><th>Key Fields</th><th>Purpose</th><th>Indexes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><code>module_registry</code></td>
+          <td>name PK, version, manifest JSONB, enabled</td>
+          <td>Active module catalog</td>
+          <td>name</td>
+        </tr>
+        <tr>
+          <td><code>scheduled_activities</code></td>
+          <td>id UUID, module_name FK, activity_type, scheduled_time, status, data JSONB</td>
+          <td>Activity orchestration state</td>
+          <td>scheduled_time, status, module_name</td>
+        </tr>
+        <tr>
+          <td><code>notifications</code></td>
+          <td>id UUID, module_name FK, type, priority, read, actions JSONB, related_activity_id FK</td>
+          <td>Unified notification store</td>
+          <td>read, created_at</td>
+        </tr>
+        <tr>
+          <td><code>user_dashboards</code></td>
+          <td>user_id + card_id PK, module_name, widget_id, position JSONB, config JSONB</td>
+          <td>Per-user dashboard config</td>
+          <td>user_id</td>
+        </tr>
+        <tr>
+          <td><code>feedback</code></td>
+          <td>id UUID, module_name, activity_id FK, rating SMALLINT, notes, data JSONB</td>
+          <td>Activity feedback & insights</td>
+          <td>module_name, activity_id</td>
+        </tr>
+        <tr>
+          <td><code>cross_module_shares</code></td>
+          <td>provider, consumer, provider_id — UNIQUE constraint; permission, expires_at</td>
+          <td>Permissioned data sharing</td>
+          <td>provider+consumer</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  <div class="footer-text">ARTEMIS / OS — Architecture Blueprint · v0.3 Alpha</div>
+  <div class="footer-text">Design & development reference · Not for distribution</div>
+</footer>
+
+<script>
+function show(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

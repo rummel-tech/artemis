@@ -7,8 +7,8 @@ import '../../widgets/dashboard/module_summary_card.dart';
 import '../../widgets/dashboard/quick_action_fab.dart';
 
 // Responsive breakpoints
-const double _tabletBreakpoint = 800.0;
-const double _desktopBreakpoint = 1200.0;
+const double _tabletBreakpoint = 600.0;
+const double _desktopBreakpoint = 840.0;
 
 /// Main dashboard screen with module overview
 class DashboardScreen extends StatefulWidget {
