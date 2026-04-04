@@ -4,7 +4,9 @@ on:
   push:
     branches: [main]
     paths:
-      - 'artemis_app/**'
+      - 'lib/**'
+      - 'web/**'
+      - 'pubspec.yaml'
   workflow_dispatch:
     inputs:
       environment:
@@ -45,16 +47,13 @@ jobs:
         run: flutter config --enable-web
 
       - name: Get dependencies
-        working-directory: artemis_app
         run: flutter pub get
 
       - name: Inject Google client ID into index.html
-        working-directory: artemis_app
         run: |
           sed -i 's|YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com|${{ secrets.GOOGLE_CLIENT_ID }}|g' web/index.html
 
       - name: Build web
-        working-directory: artemis_app
         run: |
           flutter build web --release \
             --base-href "/${{ github.event.repository.name }}/" \
@@ -66,4 +65,4 @@ jobs:
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./artemis_app/build/web
+          publish_dir: ./build/web

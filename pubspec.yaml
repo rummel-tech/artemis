@@ -43,11 +43,11 @@ dependencies:
 
   # Shared services (API client, auth, token storage, monitoring)
   shared_services:
-    path: ../../resources/shared_services
+    path: ../resources/shared_services
 
   # Design system
   rummel_blue_theme:
-    path: ../../packages/flutter/rummel_blue_theme
+    path: ../resources/rummel_blue_theme
 
 dev_dependencies:
   flutter_test:
