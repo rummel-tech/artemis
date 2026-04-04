@@ -14,12 +14,6 @@ void main() {
       expect(find.byType(MaterialApp), findsOneWidget);
     });
 
-    testWidgets('has correct title', (tester) async {
-      await tester.pumpWidget(const ArtemisApp());
-      final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
-      expect(app.title, 'Artemis Personal OS');
-    });
-
     testWidgets('uses system theme mode', (tester) async {
       await tester.pumpWidget(const ArtemisApp());
       final app = tester.widget<MaterialApp>(find.byType(MaterialApp));

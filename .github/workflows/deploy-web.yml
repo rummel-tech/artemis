@@ -1,0 +1,69 @@
+name: Deploy Artemis Web
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'artemis_app/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Build target'
+        required: true
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+env:
+  FLUTTER_VERSION: '3.27.0'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure git credentials for private packages
+        if: ${{ secrets.PAT_TOKEN != '' }}
+        run: |
+          git config --global url."https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Enable Flutter web
+        run: flutter config --enable-web
+
+      - name: Get dependencies
+        working-directory: artemis_app
+        run: flutter pub get
+
+      - name: Inject Google client ID into index.html
+        working-directory: artemis_app
+        run: |
+          sed -i 's|YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com|${{ secrets.GOOGLE_CLIENT_ID }}|g' web/index.html
+
+      - name: Build web
+        working-directory: artemis_app
+        run: |
+          flutter build web --release \
+            --base-href "/${{ github.event.repository.name }}/" \
+            --dart-define=AUTH_BASE_URL=${{ secrets.AUTH_BASE_URL }} \
+            --dart-define=PLATFORM_BASE_URL=${{ secrets.PLATFORM_BASE_URL }} \
+            --dart-define=GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./artemis_app/build/web
