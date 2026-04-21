@@ -15,6 +15,7 @@ from ..modules import (
     FinanceModule,
     FitnessModule,
     NutritionModule,
+    VoiceModule,
     WorkModule,
 )
 
@@ -27,6 +28,7 @@ def _register_modules() -> None:
         EntrepreneurshipModule(),
         FinanceModule(),
         AssetsModule(),
+        VoiceModule(),
     ]:
         discovery_service.register(module.get_manifest())
 
@@ -36,7 +38,8 @@ _module_instances: dict[str, Any] = {}
 
 def _build_module_instances() -> None:
     modules = [WorkModule(), FitnessModule(), NutritionModule(),
-               EntrepreneurshipModule(), FinanceModule(), AssetsModule()]
+               EntrepreneurshipModule(), FinanceModule(), AssetsModule(),
+               VoiceModule()]
     for m in modules:
         _module_instances[m.name] = m
 
@@ -146,6 +149,31 @@ def create_app() -> FastAPI:
         if not module:
             raise HTTPException(status_code=404, detail=f"Module '{name}' not found")
         return module.execute_action(request.action, request.data)
+
+    # --- Voice Commands ---
+
+    class VoiceCommandRequest(BaseModel):
+        text: str
+        execute: bool = False
+
+    @app.post("/api/v1/voice/command", tags=["voice"])
+    async def process_voice_command(request: VoiceCommandRequest) -> dict[str, Any]:
+        """Parse a natural-language voice command and optionally execute the routed action."""
+        voice_module = _module_instances.get("voice")
+        if not voice_module:
+            raise HTTPException(status_code=503, detail="Voice module not available")
+        result = voice_module.execute_action("process_command", {"text": request.text})
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        if request.execute and result["routing"]["module"] and result["routing"]["action"]:
+            target = _module_instances.get(result["routing"]["module"])
+            if target:
+                execution = target.execute_action(
+                    result["routing"]["action"],
+                    result["routing"].get("data", {}),
+                )
+                result["execution"] = execution
+        return result
 
     # --- Dashboard ---
 
