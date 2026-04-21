@@ -4,6 +4,7 @@ from .nutrition import NutritionModule
 from .entrepreneurship import EntrepreneurshipModule
 from .finance import FinanceModule
 from .assets import AssetsModule
+from .voice import VoiceModule
 
 __all__ = [
     "WorkModule",
@@ -12,4 +13,5 @@ __all__ = [
     "EntrepreneurshipModule",
     "FinanceModule",
     "AssetsModule",
+    "VoiceModule",
 ]
