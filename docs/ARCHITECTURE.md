@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Artemis Flutter app is the frontend integration layer. It talks exclusively to the Artemis FastAPI backend (`services/artemis/`, port 8080) which aggregates data from all module backends. The app never calls module backends directly.
+The Artemis app is the frontend integration layer. It talks exclusively to the Artemis backend (`services/artemis/`, port 8080) which aggregates data from all module backends. The app never calls module backends directly.
 
 ```
 artemis_app (Flutter)
