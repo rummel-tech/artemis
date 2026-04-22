@@ -1,4 +1,4 @@
-"""Artemis FastAPI application."""
+"""Artemis application."""
 
 from .app import create_app
 
